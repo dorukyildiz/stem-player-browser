@@ -5,25 +5,34 @@ export function useAudioPlayer(file: File | null) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [volume, setVolumeState] = useState(1);
 
     const ctxRef = useRef<AudioContext | null>(null);
     const gainRef = useRef<GainNode | null>(null);
     const bufferRef = useRef<AudioBuffer | null>(null);
     const sourceRef = useRef<AudioBufferSourceNode | null>(null);
-    const startedAtRef = useRef(0);   // ctx.currentTime when current source started
-    const offsetRef = useRef(0);      // position in buffer where it started
+    const startedAtRef = useRef(0);
+    const offsetRef = useRef(0);
     const isPlayingRef = useRef(false);
     const rafRef = useRef<number | null>(null);
+    const volumeRef = useRef(1);
 
     const getCtx = () => {
         if (!ctxRef.current) {
             const ctx = new AudioContext();
             const gain = ctx.createGain();
+            gain.gain.value = volumeRef.current; // apply current volume
             gain.connect(ctx.destination);
             ctxRef.current = ctx;
             gainRef.current = gain;
         }
         return ctxRef.current;
+    };
+
+    const setVolume = (v: number) => {
+        volumeRef.current = v;
+        setVolumeState(v);
+        if (gainRef.current) gainRef.current.gain.value = v;
     };
 
     const stopRaf = () => {
@@ -46,7 +55,7 @@ export function useAudioPlayer(file: File | null) {
     const stopSource = () => {
         const source = sourceRef.current;
         if (source) {
-            source.onended = null; // detach so manual stop doesn't fire the ended handler
+            source.onended = null;
             try { source.stop(); } catch { /* already stopped */ }
             source.disconnect();
             sourceRef.current = null;
@@ -63,7 +72,6 @@ export function useAudioPlayer(file: File | null) {
         source.connect(gainRef.current!);
         source.start(0, offsetRef.current);
         source.onended = () => {
-            // fires only on natural end (manual stop detaches this)
             offsetRef.current = 0;
             isPlayingRef.current = false;
             sourceRef.current = null;
@@ -103,7 +111,6 @@ export function useAudioPlayer(file: File | null) {
         if (wasPlaying) play();
     };
 
-    // decode whenever the file changes
     useEffect(() => {
         if (!file) return;
         let cancelled = false;
@@ -135,8 +142,7 @@ export function useAudioPlayer(file: File | null) {
         return () => { cancelled = true; };
     }, [file]);
 
-    // cleanup on unmount
     useEffect(() => () => { stopSource(); stopRaf(); }, []);
 
-    return { isReady, isPlaying, currentTime, duration, play, pause, seek };
+    return { isReady, isPlaying, currentTime, duration, volume, play, pause, seek, setVolume };
 }

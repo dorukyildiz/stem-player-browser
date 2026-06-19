@@ -92,3 +92,7 @@ body {
   width: 14px; height: 14px; border-radius: 50%; border: none;
   background: var(--accent); cursor: pointer;
 }
+
+.volume { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.volume-icon { font-size: .9rem; color: var(--text-dim); }
+.volume-slider { width: 90px; }
