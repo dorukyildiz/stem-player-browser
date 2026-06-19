@@ -1,5 +1,6 @@
 import { useState } from "react";
 import UploadZone from "./components/UploadZone";
+import Player from "./components/Player";
 
 export default function App() {
     const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -21,10 +22,7 @@ export default function App() {
                                 change
                             </button>
                         </div>
-                        <div className="player-placeholder">
-                            <p>stem player goes here</p>
-                            <span>(next step: separation + mixer)</span>
-                        </div>
+                        <Player file={audioFile} />
                     </section>
                 )}
             </main>

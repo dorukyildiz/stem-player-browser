@@ -65,3 +65,30 @@ body {
 .player-placeholder { padding: 80px 24px; text-align: center; color: var(--text-dim); }
 .player-placeholder p { margin-bottom: 6px; }
 .player-placeholder span { font-size: .8rem; opacity: .7; }
+
+.player { padding: 24px 20px; }
+.transport { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.play-btn {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--bg-elev);
+  color: var(--text); font-size: .9rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.play-btn:hover { border-color: var(--accent); }
+.time { font-variant-numeric: tabular-nums; color: var(--text-dim); font-size: .85rem; }
+.status { color: var(--text-dim); font-size: .85rem; }
+
+.seek {
+  width: 100%; -webkit-appearance: none; appearance: none;
+  height: 4px; border-radius: 2px; cursor: pointer; outline: none;
+}
+.seek::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--accent); cursor: pointer;
+}
+.seek::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%; border: none;
+  background: var(--accent); cursor: pointer;
+}
