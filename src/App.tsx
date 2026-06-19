@@ -1,24 +1,29 @@
 import { useState } from "react";
+import type { SeparationResult } from "demucs-web";
 import UploadZone from "./components/UploadZone";
 import Player from "./components/Player";
+import StemMixer from "./components/StemMixer";
 import { separateStems } from "./lib/separateStems";
 
 export default function App() {
     const [audioFile, setAudioFile] = useState<File | null>(null);
+    const [stems, setStems] = useState<SeparationResult | null>(null);
     const [status, setStatus] = useState("");
+
+    const reset = () => { setAudioFile(null); setStems(null); setStatus(""); };
 
     const handleSeparate = async () => {
         if (!audioFile) return;
         try {
             setStatus("loading model…");
-            const stems = await separateStems(
+            const result = await separateStems(
                 audioFile,
                 (p) => setStatus(`separating… ${Math.round(p * 100)}%`),
                 (loaded, total) =>
                     setStatus(`downloading model… ${Math.round((loaded / total) * 100)}%`),
             );
-            console.log("STEMS", stems);
-            setStatus("done — check the console");
+            setStems(result);
+            setStatus("");
         } catch (err) {
             console.error(err);
             setStatus(`error: ${(err as Error).message}`);
@@ -38,17 +43,22 @@ export default function App() {
                     <section className="player-panel">
                         <div className="track-bar">
                             <span className="track-name">{audioFile.name}</span>
-                            <button className="ghost-btn" onClick={() => setAudioFile(null)}>
-                                change
-                            </button>
+                            <button className="ghost-btn" onClick={reset}>change</button>
                         </div>
-                        <Player file={audioFile} />
-                        <div className="separate-bar">
-                            <button className="primary-btn" onClick={handleSeparate}>
-                                Separate into stems
-                            </button>
-                            {status && <span className="status">{status}</span>}
-                        </div>
+
+                        {stems ? (
+                            <StemMixer stems={stems} />
+                        ) : (
+                            <>
+                                <Player file={audioFile} />
+                                <div className="separate-bar">
+                                    <button className="primary-btn" onClick={handleSeparate}>
+                                        Separate into stems
+                                    </button>
+                                    {status && <span className="status">{status}</span>}
+                                </div>
+                            </>
+                        )}
                     </section>
                 )}
             </main>

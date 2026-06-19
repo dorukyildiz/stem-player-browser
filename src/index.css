@@ -107,3 +107,8 @@ body {
   font-size: .9rem; cursor: pointer; transition: opacity .2s;
 }
 .primary-btn:hover { opacity: .9; }
+
+.stems { margin-top: 22px; display: flex; flex-direction: column; gap: 14px; }
+.stem-row { display: flex; align-items: center; gap: 14px; }
+.stem-name { width: 64px; font-size: .85rem; color: var(--text-dim); }
+.stem-slider { flex: 1; }
