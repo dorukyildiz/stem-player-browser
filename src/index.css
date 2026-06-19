@@ -96,3 +96,14 @@ body {
 .volume { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .volume-icon { font-size: .9rem; color: var(--text-dim); }
 .volume-slider { width: 90px; }
+
+.separate-bar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 0 20px 20px;
+}
+.primary-btn {
+  background: var(--accent); border: none; color: #0b0b10;
+  padding: 10px 18px; border-radius: 8px; font-weight: 600;
+  font-size: .9rem; cursor: pointer; transition: opacity .2s;
+}
+.primary-btn:hover { opacity: .9; }
