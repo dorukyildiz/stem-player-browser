@@ -112,3 +112,18 @@ body {
 .stem-row { display: flex; align-items: center; gap: 14px; }
 .stem-name { width: 64px; font-size: .85rem; color: var(--text-dim); }
 .stem-slider { flex: 1; }
+
+.progress { flex: 1; }
+.progress-label {
+  display: flex; justify-content: space-between;
+  font-size: .8rem; color: var(--text-dim); margin-bottom: 6px;
+}
+.progress-track {
+  height: 6px; background: var(--border);
+  border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: var(--accent);
+  border-radius: 3px; transition: width .2s ease;
+}
+.status.error { color: #ff9b9b; }
