@@ -1,16 +1,18 @@
-import * as ort from "onnxruntime-web";
-import { DemucsProcessor, CONSTANTS } from "demucs-web";
+import type { SeparationResult } from "demucs-web";
 
 const TARGET_SR = 44100;
 
-export interface Stems {
-    drums: { left: Float32Array; right: Float32Array };
-    bass: { left: Float32Array; right: Float32Array };
-    other: { left: Float32Array; right: Float32Array };
-    vocals: { left: Float32Array; right: Float32Array };
+let worker: Worker | null = null;
+function getWorker(): Worker {
+    if (!worker) {
+        worker = new Worker(new URL("./separationWorker.ts", import.meta.url), {
+            type: "module",
+        });
+    }
+    return worker;
 }
 
-// decode the file and resample to 44.1kHz stereo
+// decode + resample to 44.1kHz stereo (main thread, fast)
 async function fileToStereo44k(file: File) {
     const arrayBuffer = await file.arrayBuffer();
     const tmpCtx = new AudioContext();
@@ -25,32 +27,43 @@ async function fileToStereo44k(file: File) {
     src.start();
     const rendered = await offline.startRendering();
 
-    const left = rendered.getChannelData(0);
+    const left = new Float32Array(rendered.getChannelData(0));
     const right =
-        rendered.numberOfChannels > 1 ? rendered.getChannelData(1) : left;
-    return { left: new Float32Array(left), right: new Float32Array(right) };
+        rendered.numberOfChannels > 1
+            ? new Float32Array(rendered.getChannelData(1))
+            : new Float32Array(rendered.getChannelData(0));
+    return { left, right };
 }
 
 export async function separateStems(
     file: File,
     onProgress?: (p: number) => void,
     onDownloadProgress?: (loaded: number, total: number) => void,
-): Promise<Stems> {
-    ort.env.wasm.wasmPaths =
-        "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/";
-
+): Promise<SeparationResult> {
     const { left, right } = await fileToStereo44k(file);
+    const w = getWorker();
 
-    const processor = new DemucsProcessor({
-        ort,
-        onProgress: (info) => onProgress?.(info.progress),
-        onDownloadProgress: (loaded, total) => onDownloadProgress?.(loaded, total),
-        onLog: (phase, msg) => console.log(`[${phase}] ${msg}`),
+    return new Promise<SeparationResult>((resolve, reject) => {
+        const handle = (e: MessageEvent) => {
+            const msg = e.data;
+            switch (msg.type) {
+                case "download":
+                    onDownloadProgress?.(msg.loaded, msg.total);
+                    break;
+                case "progress":
+                    onProgress?.(msg.progress);
+                    break;
+                case "done":
+                    w.removeEventListener("message", handle);
+                    resolve(msg.stems as SeparationResult);
+                    break;
+                case "error":
+                    w.removeEventListener("message", handle);
+                    reject(new Error(msg.message));
+                    break;
+            }
+        };
+        w.addEventListener("message", handle);
+        w.postMessage({ type: "separate", left, right }, [left.buffer, right.buffer]);
     });
-
-    // downloads the model (~170MB, cached after first time) from Hugging Face
-    await processor.loadModel(CONSTANTS.DEFAULT_MODEL_URL);
-
-    const result = await processor.separate(left, right);
-    return result as Stems;
 }
