@@ -1,73 +1,59 @@
-# React + TypeScript + Vite
+# stem player browser
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Upload a song and split it into **vocals, drums, bass, and other** — entirely in your browser. No backend, no uploads: your audio never leaves your device. Mix the separated stems live with per-track volume and full playback controls.
 
-Currently, two official plugins are available:
+**Live demo:** https://stem-player-browser.netlify.app/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **In-browser stem separation** — runs Demucs (htdemucs, v4) locally via ONNX Runtime Web, with no server involved.
+- **Off-thread processing** — separation runs in a Web Worker, so the UI never freezes while a track is being processed.
+- **Synchronized mixer** — all four stems play in perfect sync through the Web Audio API, each with independent volume control.
+- **Full transport** — play, pause, and seek with a live time display.
+- **Private by design** — audio is processed on-device and is never uploaded anywhere.
+- **Live progress** — model download and separation progress are shown while you wait.
 
-## Expanding the ESLint configuration
+## How it works
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. The uploaded file is decoded and resampled to 44.1 kHz stereo on the main thread.
+2. The heavy lifting, Demucs inference, runs in a Web Worker via ONNX Runtime Web (WebGPU with a WASM fallback), keeping the page responsive. The model (~170 MB) is fetched from Hugging Face on first use and cached by the browser afterwards.
+3. Each of the four resulting stems is turned into an `AudioBuffer`, routed through its own `GainNode` into a shared output, and all sources are started at the same instant for sample-accurate sync.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Because ONNX Runtime Web relies on `SharedArrayBuffer`, the page must be **cross-origin isolated** (COOP/COEP headers). This is configured in `vite.config.ts` for development and `netlify.toml` for production.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Tech stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **Vite + React + TypeScript**
+- **Web Audio API** — playback engine and per-stem mixer
+- **onnxruntime-web + demucs-web** — in-browser Demucs source separation
+- **Web Worker** — off-main-thread inference
+- **Netlify** — hosting with cross-origin isolation headers
+
+## Running locally
+
+Requires Node.js 20.19+ (or 22.12+).
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open the printed local URL. To confirm cross-origin isolation is active, run `crossOriginIsolated` in the browser console — it should return `true`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Building
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
+npm run preview
 ```
+
+## Acknowledgements
+
+- [Demucs](https://github.com/facebookresearch/demucs) — music source separation model by Meta AI
+- [demucs-web](https://github.com/timcsy/demucs-web) — ONNX Runtime Web port of Demucs
+- Favicon from [Twemoji](https://github.com/jdecked/twemoji) (CC-BY 4.0)
+
+## Author
+
+Built by **Doruk YILDIZ** — [GitHub](https://github.com/dorukyildiz)
