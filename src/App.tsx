@@ -87,6 +87,18 @@ export default function App() {
                     </section>
                 )}
             </main>
+
+            <footer className="app-footer">
+                <span>Built by Doruk YILDIZ</span>
+                <span className="dot">·</span>
+                <a
+                    href="https://github.com/dorukyildiz/stem-player-browser"
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    GitHub
+                </a>
+            </footer>
         </div>
     );
 }

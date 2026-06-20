@@ -127,3 +127,22 @@ body {
   border-radius: 3px; transition: width .2s ease;
 }
 .status.error { color: #ff9b9b; }
+
+.app-footer {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-size: .82rem;
+  color: var(--text-dim);
+}
+.app-footer a {
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color .2s;
+}
+.app-footer a:hover { color: var(--accent); }
+.app-footer .dot { opacity: .5; }
